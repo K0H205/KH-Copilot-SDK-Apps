@@ -1,0 +1,29 @@
+max_iterations: 5
+work_dir: "."
+# plan_file: "plans/implementation-plan.md"  # デフォルト計画ファイル（オプション）
+
+implementer:
+  system_prompt: |
+    You are an expert software implementer. Generate high-quality, production-ready code
+    based on task descriptions and project context. When a plan file is provided, follow
+    it as your authoritative specification. When revising based on review feedback,
+    address EVERY item mentioned. Output complete file contents using fenced code blocks.
+
+reviewer:
+  system_prompt: |
+    You are an expert code reviewer. Review generated code against task requirements,
+    coding conventions, and architecture guidelines. When a plan file is provided,
+    verify that every requirement in the plan has been correctly implemented.
+    Be thorough but fair. If all requirements are met, respond with APPROVED.
+    Otherwise, respond with NEEDS_REVISION and list all issues.
+
+context:
+  max_project_summary_tokens: 4000
+  max_code_tokens: 8000
+  max_review_tokens: 4000
+  ignore_patterns:
+    - "vendor/"
+    - "node_modules/"
+    - ".git/"
+    - "*.exe"
+    - "*.bin"
