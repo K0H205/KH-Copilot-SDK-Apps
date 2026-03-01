@@ -102,7 +102,7 @@ func (cm *ContextManager) SetTask(task *TaskContext) {
 			task.TargetContents[f] = string(data)
 		}
 	}
-	task.TokenEstimate = estimateTokens(task.Description)
+	task.TokenEstimate = 0
 	for _, c := range task.TargetContents {
 		task.TokenEstimate += estimateTokens(c)
 	}
@@ -116,7 +116,7 @@ func (cm *ContextManager) LoadPlan() error {
 		return fmt.Errorf("SetTask must be called before LoadPlan")
 	}
 	if cm.task.PlanFile == "" {
-		return nil // 計画なし → エラーではない
+		return fmt.Errorf("plan file is required: specify --plan flag or plan_file in config")
 	}
 
 	// 相対パスならプロジェクトルート基準で解決
@@ -185,24 +185,25 @@ func (cm *ContextManager) BuildImplementerPrompt(iteration int, feedback string)
 		b.WriteString("--- END OF PLAN ---\n\n")
 	}
 
-	// L2: タスクコンテキスト
-	b.WriteString("## Task Context\n\n")
-	b.WriteString(fmt.Sprintf("**Task Description:** %s\n\n", cm.task.Description))
+	// L2: タスクコンテキスト（計画ファイルがタスク記述を兼ねる）
+	if len(cm.task.TargetFiles) > 0 || len(cm.task.Constraints) > 0 {
+		b.WriteString("## Task Context\n\n")
 
-	if len(cm.task.TargetFiles) > 0 {
-		b.WriteString("**Target Files:**\n")
-		for _, f := range cm.task.TargetFiles {
-			b.WriteString(fmt.Sprintf("- `%s`\n", f))
+		if len(cm.task.TargetFiles) > 0 {
+			b.WriteString("**Target Files:**\n")
+			for _, f := range cm.task.TargetFiles {
+				b.WriteString(fmt.Sprintf("- `%s`\n", f))
+			}
+			b.WriteString("\n")
 		}
-		b.WriteString("\n")
-	}
 
-	if len(cm.task.Constraints) > 0 {
-		b.WriteString("**Constraints:**\n")
-		for _, c := range cm.task.Constraints {
-			b.WriteString(fmt.Sprintf("- %s\n", c))
+		if len(cm.task.Constraints) > 0 {
+			b.WriteString("**Constraints:**\n")
+			for _, c := range cm.task.Constraints {
+				b.WriteString(fmt.Sprintf("- %s\n", c))
+			}
+			b.WriteString("\n")
 		}
-		b.WriteString("\n")
 	}
 
 	// L1: プロジェクトコンテキスト
@@ -271,11 +272,9 @@ func (cm *ContextManager) BuildReviewerPrompt(iteration int, codeOutput string) 
 		b.WriteString("--- END OF PLAN ---\n\n")
 	}
 
-	// L2: タスクコンテキスト
-	b.WriteString("## Task Context\n\n")
-	b.WriteString(fmt.Sprintf("**Task Description:** %s\n\n", cm.task.Description))
-
+	// L2: タスクコンテキスト（計画ファイルがタスク記述を兼ねる）
 	if len(cm.task.Constraints) > 0 {
+		b.WriteString("## Task Context\n\n")
 		b.WriteString("**Constraints:**\n")
 		for _, c := range cm.task.Constraints {
 			b.WriteString(fmt.Sprintf("- %s\n", c))

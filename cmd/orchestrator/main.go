@@ -15,17 +15,10 @@ import (
 
 func main() {
 	// CLI フラグ定義
-	taskDesc := flag.String("task", "", "実行するタスクの記述")
 	configPath := flag.String("config", "config.yaml", "設定ファイルパス")
-	planFile := flag.String("plan", "", "マークダウン計画ファイルのパス")
+	planFile := flag.String("plan", "", "マークダウン計画ファイルのパス（必須）")
 	workDir := flag.String("workdir", ".", "作業ディレクトリ")
 	flag.Parse()
-
-	if *taskDesc == "" {
-		fmt.Fprintln(os.Stderr, "Error: --task is required")
-		flag.Usage()
-		os.Exit(1)
-	}
 
 	// 設定読み込み
 	cfg, err := config.Load(*configPath)
@@ -51,22 +44,26 @@ func main() {
 		resolvedPlanFile = cfg.PlanFile
 	}
 
-	// 計画ファイルの存在確認
-	if resolvedPlanFile != "" {
-		planPath := resolvedPlanFile
-		if !filepath.IsAbs(planPath) {
-			planPath = filepath.Join(absWorkDir, planPath)
-		}
-		if _, err := os.Stat(planPath); os.IsNotExist(err) {
-			log.Fatalf("Plan file not found: %s", planPath)
-		}
-		resolvedPlanFile = planPath
+	// 計画ファイルは必須
+	if resolvedPlanFile == "" {
+		fmt.Fprintln(os.Stderr, "Error: --plan is required (or set plan_file in config.yaml)")
+		flag.Usage()
+		os.Exit(1)
 	}
 
-	// タスクコンテキストを構築
+	// 計画ファイルの存在確認
+	planPath := resolvedPlanFile
+	if !filepath.IsAbs(planPath) {
+		planPath = filepath.Join(absWorkDir, planPath)
+	}
+	if _, err := os.Stat(planPath); os.IsNotExist(err) {
+		log.Fatalf("Plan file not found: %s", planPath)
+	}
+	resolvedPlanFile = planPath
+
+	// タスクコンテキストを構築（計画ファイルが全ての指示の源泉）
 	task := &appctx.TaskContext{
-		Description: *taskDesc,
-		PlanFile:    resolvedPlanFile,
+		PlanFile: resolvedPlanFile,
 	}
 
 	// オーケストレーション実行

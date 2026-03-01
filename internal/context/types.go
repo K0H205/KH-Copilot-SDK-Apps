@@ -12,14 +12,14 @@ type ProjectContext struct {
 
 // TaskContext はタスク固有のコンテキストを保持する。
 // 実行毎に1回だけ設定し、反復ループ中はキャッシュとして使用する。
+// 計画ファイルが全ての指示の源泉となる（--task は不要）。
 type TaskContext struct {
-	Description    string            // タスクの記述
 	TargetFiles    []string          // 対象ファイルパス
 	Constraints    []string          // 制約条件
 	TargetContents map[string]string // 対象ファイルの内容キャッシュ
 	TokenEstimate  int               // 全体のトークン数見積もり
 
-	// 計画ファイル関連フィールド
+	// 計画ファイル（必須）
 	PlanFile       string // --plan で指定されたファイルパス
 	PlanContent    string // 読み込まれたマークダウン全文（キャッシュ）
 	PlanTokenCount int    // トークン数の見積もり（予算管理用）
