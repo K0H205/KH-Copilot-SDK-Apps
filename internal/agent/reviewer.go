@@ -7,6 +7,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/K0H205/KH-Copilot-SDK-Apps/internal/config"
+	appctx "github.com/K0H205/KH-Copilot-SDK-Apps/internal/context"
 	"github.com/K0H205/KH-Copilot-SDK-Apps/internal/message"
 )
 
@@ -17,6 +19,25 @@ type Reviewer struct {
 	BaseAgent
 	implCh   <-chan message.Message // 実装結果を受信
 	reviewCh chan<- message.Message // レビュー結果を送信
+}
+
+// NewReviewer はレビュアーエージェントを生成する。
+func NewReviewer(
+	ctxMgr *appctx.ContextManager,
+	projectRoot string,
+	implCh <-chan message.Message,
+	reviewCh chan<- message.Message,
+	cfg config.AgentConfig,
+) *Reviewer {
+	return &Reviewer{
+		BaseAgent: BaseAgent{
+			Config:      cfg,
+			CtxMgr:      ctxMgr,
+			ProjectRoot: projectRoot,
+		},
+		implCh:   implCh,
+		reviewCh: reviewCh,
+	}
 }
 
 // Run はレビュアーエージェントのメインループ。

@@ -6,6 +6,8 @@ import (
 	"log"
 	"time"
 
+	"github.com/K0H205/KH-Copilot-SDK-Apps/internal/config"
+	appctx "github.com/K0H205/KH-Copilot-SDK-Apps/internal/context"
 	"github.com/K0H205/KH-Copilot-SDK-Apps/internal/message"
 )
 
@@ -16,6 +18,25 @@ type Implementer struct {
 	BaseAgent
 	implCh   chan<- message.Message // 実装結果を送信
 	reviewCh <-chan message.Message // レビュー結果を受信
+}
+
+// NewImplementer は実装者エージェントを生成する。
+func NewImplementer(
+	ctxMgr *appctx.ContextManager,
+	projectRoot string,
+	implCh chan<- message.Message,
+	reviewCh <-chan message.Message,
+	cfg config.AgentConfig,
+) *Implementer {
+	return &Implementer{
+		BaseAgent: BaseAgent{
+			Config:      cfg,
+			CtxMgr:      ctxMgr,
+			ProjectRoot: projectRoot,
+		},
+		implCh:   implCh,
+		reviewCh: reviewCh,
+	}
 }
 
 // Run は実装者エージェントのメインループ。
